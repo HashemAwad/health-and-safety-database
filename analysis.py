@@ -15,6 +15,22 @@ import os
 
 os.makedirs("charts", exist_ok=True)
 
+# CHART STYLE: teal = care network, red = emergency response, blue = people
+TEAL, RED, BLUE = "#0f766e", "#dc2626", "#2563eb"
+plt.rcParams.update({
+    "font.size": 12, "figure.dpi": 150, "savefig.dpi": 150, "savefig.bbox": "tight",
+    "axes.spines.top": False, "axes.spines.right": False, "axes.edgecolor": "#cbd5e1",
+    "axes.labelcolor": "#334155", "axes.titlesize": 16, "axes.titleweight": "bold",
+    "axes.titlelocation": "left", "axes.titlepad": 16, "axes.ymargin": 0.12, "axes.grid": True, "axes.grid.axis": "y",
+    "axes.axisbelow": True, "grid.color": "#e2e8f0",
+    "xtick.color": "#475569", "ytick.color": "#475569",
+})
+
+def label(bars):
+    """Write each bar's value on top of it."""
+    plt.bar_label(bars, padding=3, fontsize=11, color="#334155")
+    return bars
+
 # SECTION 1 — LOAD ALL 10 CSV FILES
 q1  = pd.read_csv("MySQL/CSV/q1.csv")
 q2  = pd.read_csv("MySQL/CSV/q2.csv")
@@ -42,7 +58,10 @@ for df in dfs:
 
 for df in dfs:
     for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors="ignore")
+        try:
+            df[col] = pd.to_numeric(df[col])
+        except (ValueError, TypeError):
+            pass  # not numeric: keep the text as it is
 
 for df in dfs:
     for col in df.columns:
@@ -63,7 +82,7 @@ print(q1)
 # Visualization:
 #   This chart compares how dangerous each region is by showing the percentage of incidents that are high severity.
 plt.figure(figsize=(10,5))
-plt.bar(q1['region'], q1['high_severity_percentage'], color='salmon')
+label(plt.bar(q1['region'], q1['high_severity_percentage'], color=RED))
 plt.title("Q1 — High Severity Percentage per Region")
 plt.xlabel("Region")
 plt.ylabel("High Severity %")
@@ -89,7 +108,7 @@ print(q2)
 #       - Negative gap = over-response (overserved)
 #       - Zero = perfect response.
 plt.figure(figsize=(10,5))
-plt.bar(q2['region'], q2['response_deficit_gap'], color='skyblue')
+label(plt.bar(q2['region'], q2['response_deficit_gap'], color=RED))
 plt.title("Q2 — Agency Response Deficit Gap per Region")
 plt.xlabel("Region")
 plt.ylabel("Deficit Gap")
@@ -111,8 +130,8 @@ print(q3)
 
 # Visualization 1:
 #   This chart shows how many incidents each hospital handled.
-plt.figure(figsize=(12,5))
-plt.bar(q3['hospital_name'], q3['incident_count'], color='steelblue')
+plt.figure(figsize=(12, 8))
+label(plt.bar(q3['hospital_name'], q3['incident_count'], color=TEAL))
 plt.title("Q3 — Incident Count per Hospital")
 plt.xlabel("Hospital")
 plt.ylabel("Incident Count")
@@ -123,8 +142,8 @@ plt.close()
 
 # Visualization 2:
 #   This chart compares average patient waiting time across hospitals.
-plt.figure(figsize=(12,5))
-plt.bar(q3['hospital_name'], q3['avg_wait_time'], color='darkred')
+plt.figure(figsize=(12, 8))
+label(plt.bar(q3['hospital_name'], q3['avg_wait_time'], color=TEAL))
 plt.title("Q3 — Average Waiting Time per Hospital")
 plt.xlabel("Hospital")
 plt.ylabel("Average Wait Time (minutes)")
@@ -148,7 +167,7 @@ print(q4)
 #   This chart shows how many citizens depend on each resource.
 #       - Higher = more load on that region's services.
 plt.figure(figsize=(10,5))
-plt.bar(q4['region'], q4['citizens_per_resource'], color='purple')
+label(plt.bar(q4['region'], q4['citizens_per_resource'], color=BLUE))
 plt.title("Q4 — Citizens per Resource per Region")
 plt.xlabel("Region")
 plt.ylabel("Citizens per Resource")
@@ -170,8 +189,8 @@ print(q5)
 
 # Visualization:
 #   This chart shows which facilities serve the most regions. Useful for identifying distributed service centers.
-plt.figure(figsize=(10,5))
-plt.bar(q5['facility_name'], q5['regions_served'], color='green')
+plt.figure(figsize=(12, 8))
+label(plt.bar(q5['facility_name'], q5['regions_served'], color=TEAL))
 plt.title("Q5 — Regions Served per Facility")
 plt.xlabel("Facility")
 plt.ylabel("Regions Served")
@@ -194,7 +213,7 @@ print(q6)
 # Visualization:
 #   How often incidents require multiple agencies (police+fire+hospital).
 plt.figure(figsize=(10,5))
-plt.bar(q6['region'], q6['multi_agency_percentage'], color='red')
+label(plt.bar(q6['region'], q6['multi_agency_percentage'], color=RED))
 plt.title("Q6 — Multi-Agency Incident Percentage per Region")
 plt.xlabel("Region")
 plt.ylabel("Multi-Agency %")
@@ -217,7 +236,7 @@ print(q7)
 # Visualization:
 #   This chart highlights how overloaded each region's healthcare system is.
 plt.figure(figsize=(10,5))
-plt.bar(q7['region'], q7['incidents_per_bed_ratio'], color='brown')
+label(plt.bar(q7['region'], q7['incidents_per_bed_ratio'], color=TEAL))
 plt.title("Q7 — Incidents per Hospital Bed Ratio")
 plt.xlabel("Region")
 plt.ylabel("Incidents per Bed")
@@ -240,7 +259,7 @@ print(q8)
 # Visualization:
 #   Which types of incidents occur most frequently citywide.
 plt.figure(figsize=(10,5))
-plt.bar(q8['incident_type'], q8['occurrence_count'], color='gray')
+label(plt.bar(q8['incident_type'], q8['occurrence_count'], color=RED))
 plt.title("Q8 — Incident Type Frequency")
 plt.xlabel("Incident Type")
 plt.ylabel("Occurrences")
@@ -279,8 +298,8 @@ print(q10)
 
 # Visualization:
 #   How often facilities receive people from outside their own region.
-plt.figure(figsize=(10,5))
-plt.bar(q10['facility_name'], q10['cross_region_visits'], color='navy')
+plt.figure(figsize=(12, 8))
+label(plt.bar(q10['facility_name'], q10['cross_region_visits'], color=TEAL))
 plt.title("Q10 — Cross-Region Visits per Facility")
 plt.xlabel("Facility")
 plt.ylabel("Cross-Region Visits")
